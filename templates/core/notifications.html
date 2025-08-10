@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - CAMIGO{% endblock %}
+
+{% block content %}
+<div class="feed-container">
+    <!-- Header -->
+    <div class="post-card">
+        <div class="post-header" style="justify-content: center; padding: 1.5rem;">
+            <h3 style="color: var(--xeox-dark); margin: 0;">
+                <i class="fas fa-heart me-2" style="color: var(--xeox-purple);"></i>
+                Notifications
+            </h3>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    {% if notifications %}
+        {% for notification in notifications %}
+        <div class="post-card">
+            <div class="post-header">
+                <div style="display: flex; align-items: center; gap: 0.75rem; width: 100%;">
+                    {% if notification.sender.profile_picture %}
+                    <img src="{{ notification.sender.profile_picture.url }}" alt="{{ notification.sender.username }}" class="post-avatar">
+                    {% else %}
+                    <div class="post-avatar bg-secondary d-flex align-items-center justify-content-center text-white" style="font-size: 16px;">
+                        {{ notification.sender.username|first|upper }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="post-user-info" style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            {% if notification.notification_type == 'like' %}
+                            <i class="fas fa-heart" style="color: #ff4757;"></i>
+                            {% elif notification.notification_type == 'comment' %}
+                            <i class="fas fa-comment" style="color: var(--xeox-purple);"></i>
+                            {% elif notification.notification_type == 'follow' %}
+                            <i class="fas fa-user-plus" style="color: var(--xeox-mauve);"></i>
+                            {% elif notification.notification_type == 'share' %}
+                            <i class="fas fa-share" style="color: var(--xeox-rose);"></i>
+                            {% endif %}
+                            <h6 style="margin: 0;">{{ notification.message }}</h6>
+                        </div>
+                        <small style="color: var(--xeox-mauve);">{{ notification.created_at|timesince }} ago</small>
+                    </div>
+                    
+                    {% if notification.post %}
+                    <a href="/posts/{{ notification.post.id }}/" class="btn btn-sm" style="background: var(--xeox-light); color: var(--xeox-purple);">
+                        View Post
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if notifications.has_other_pages %}
+        <div class="post-card text-center">
+            <div style="padding: 1rem;">
+                {% if notifications.has_previous %}
+                <a href="?page={{ notifications.previous_page_number }}" class="btn btn-outline-primary me-2">Previous</a>
+                {% endif %}
+                
+                <span style="color: var(--xeox-mauve);">
+                    Page {{ notifications.number }} of {{ notifications.paginator.num_pages }}
+                </span>
+                
+                {% if notifications.has_next %}
+                <a href="?page={{ notifications.next_page_number }}" class="btn btn-outline-primary ms-2">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="post-card text-center" style="padding: 3rem 1rem;">
+            <i class="fas fa-bell-slash fa-3x" style="color: var(--xeox-mauve); margin-bottom: 1rem;"></i>
+            <h4 style="color: var(--xeox-dark);">No notifications yet</h4>
+            <p style="color: var(--xeox-mauve);">When people interact with your posts, you'll see notifications here</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

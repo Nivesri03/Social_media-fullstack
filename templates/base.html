@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CAMIGO{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body{% block body_attributes %}{% endblock %}>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <!-- CAMIGO Logo with Heart above 'i' -->
+                <div class="camigo-logo" style="position: relative; display: inline-block;">
+                    <h1 class="splash-title" style="color: #2c3e50; font-size: 4rem; font-weight: 700; letter-spacing: 3px; margin: 0; position: relative; display: inline-block;">
+                        CAM<span style="position: relative; display: inline-block;">
+                            <!-- Heart positioned above the 'i' -->
+                            <svg width="35" height="35" viewBox="0 0 24 24" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); z-index: 1;">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                                      fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
+                            </svg>
+                            I
+                        </span>GO
+                    </h1>
+                </div>
+            </div>
+            <div class="splash-tagline">Share Your World</div>
+            <div class="splash-loader">
+                <div class="loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Header -->
+    <header class="top-header">
+        <a href="{% url 'core:home' %}" class="brand-logo" style="font-size: 1.8rem; font-weight: 700; text-decoration: none; display: inline-block; position: relative;">
+            <span style="color: white; letter-spacing: 1px; position: relative; display: inline-block;">
+                CAM<span style="position: relative; display: inline-block;">
+                    <!-- Heart positioned above the 'i' -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); z-index: 1;">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                              fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
+                    </svg>
+                    I
+                </span>GO
+            </span>
+        </a>
+
+        <div class="header-actions" style="display: flex; align-items: center; gap: 1.5rem;">
+            {% if user.is_authenticated %}
+                <button class="header-btn" onclick="openCreateModal()" style="padding: 0.5rem;">
+                    <i class="fas fa-plus" style="font-size: 1.2rem; color: #2c3e50;"></i>
+                </button>
+                <button class="header-btn" onclick="openNotifications()" style="position: relative; padding: 0.5rem;">
+                    <i class="fas fa-heart" style="font-size: 1.2rem; color: #e74c3c;"></i>
+                    <span id="notification-badge" class="notification-badge" style="position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: none; align-items: center; justify-content: center;">0</span>
+                </button>
+                <button class="header-btn" onclick="openMessages()" style="position: relative; padding: 0.5rem;">
+                    <i class="fas fa-comment" style="font-size: 1.2rem; color: #3498db;"></i>
+                    <span id="message-badge" class="notification-badge" style="position: absolute; top: -2px; right: -2px; background: #3498db; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: none; align-items: center; justify-content: center;">0</span>
+                </button>
+
+                <!-- Profile Dropdown -->
+                <div class="dropdown">
+                    <button class="header-btn dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" style="border: none; background: none; padding: 0;">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}"
+                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #e74c3c;">
+                        {% else %}
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #e74c3c, #c0392b); display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem; font-weight: bold; border: 2px solid #e74c3c;">
+                            {{ user.username|first|upper }}
+                        </div>
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" style="background: white; border: none; box-shadow: var(--shadow-strong); border-radius: var(--border-radius); min-width: 250px;">
+                        <li class="dropdown-header" style="background: linear-gradient(135deg, var(--xeox-light), var(--xeox-rose)); color: var(--xeox-dark); font-weight: 600; padding: 1rem;">
+                            <div class="d-flex align-items-center">
+                                {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}"
+                                     style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 0.75rem;">
+                                {% else %}
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--xeox-purple), var(--xeox-mauve)); display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem; font-weight: bold; margin-right: 0.75rem;">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div>{{ user.get_full_name|default:user.username }}</div>
+                                    <small style="opacity: 0.8;">@{{ user.username }}</small>
+                                </div>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile' user.username %}">
+                            <i class="fas fa-user me-2" style="color: var(--xeox-purple);"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showLikedPosts()">
+                            <i class="fas fa-heart me-2" style="color: #ff4757;"></i>Liked Posts
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showSavedPosts()">
+                            <i class="fas fa-bookmark me-2" style="color: var(--xeox-mauve);"></i>Saved Posts
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showTimeTracking()">
+                            <i class="fas fa-clock me-2" style="color: #e74c3c;"></i>Time on CAMIGO: <span id="timeSpent">0h 0m</span>
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:edit_profile' %}">
+                            <i class="fas fa-cog me-2" style="color: var(--xeox-dark);"></i>Settings
+                        </a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="header-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="{% url 'core:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="nav-icon fas fa-home"></i>
+            <span class="nav-label">Home</span>
+        </a>
+
+        <a href="{% url 'core:reels' %}" class="nav-item {% if request.resolver_match.url_name == 'reels' %}active{% endif %}">
+            <i class="nav-icon fas fa-video"></i>
+            <span class="nav-label">Reels</span>
+        </a>
+
+        <a href="{% url 'posts:search' %}" class="nav-item {% if request.resolver_match.url_name == 'search' %}active{% endif %}">
+            <i class="nav-icon fas fa-search"></i>
+            <span class="nav-label">Search</span>
+        </a>
+
+        {% if user.is_authenticated %}
+        <button class="nav-item" onclick="openCreateModal()" style="background: none; border: none;">
+            <i class="nav-icon fas fa-plus"></i>
+            <span class="nav-label">Post</span>
+        </button>
+        {% else %}
+        <button class="nav-item" onclick="showLoginModal()" style="background: none; border: none;">
+            <i class="nav-icon fas fa-plus"></i>
+            <span class="nav-label">Post</span>
+        </button>
+        {% endif %}
+
+        <a href="{% url 'core:explore' %}" class="nav-item {% if request.resolver_match.url_name == 'explore' %}active{% endif %}">
+            <i class="nav-icon fas fa-compass"></i>
+            <span class="nav-label">Explore</span>
+        </a>
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'accounts:profile' user.username %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="Profile" class="nav-icon rounded-circle"
+                 style="width: 24px; height: 24px; object-fit: cover;">
+            {% else %}
+            <i class="nav-icon fas fa-user"></i>
+            {% endif %}
+            <span class="nav-label">Profile</span>
+        </a>
+        {% else %}
+        <button class="nav-item" onclick="showLoginModal()" style="background: none; border: none;">
+            <i class="nav-icon fas fa-user"></i>
+            <span class="nav-label">Profile</span>
+        </button>
+        {% endif %}
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Messages -->
+            {% if messages %}
+                <div class="row">
+                    <div class="col-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal">
+        <div class="login-modal-content">
+            <div class="login-header">
+                <div class="login-logo">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    <h2>Welcome to Xeox</h2>
+                </div>
+                <p>Connect and share with the world</p>
+            </div>
+
+            <form id="login-form" class="login-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="email" id="email" name="email" placeholder="Email" required class="login-input">
+                    <i class="fas fa-envelope input-icon"></i>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" id="password" name="password" placeholder="Password" required class="login-input">
+                    <i class="fas fa-lock input-icon"></i>
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <span class="btn-text">Sign In</span>
+                    <div class="btn-loader" style="display: none;">
+                        <div class="spinner"></div>
+                    </div>
+                </button>
+
+                <div class="login-divider">
+                    <span>or</span>
+                </div>
+
+                <button type="button" class="demo-login-btn" onclick="fillDemoCredentials()">
+                    <i class="fas fa-user"></i>
+                    Use Demo Account
+                </button>
+
+                <div class="login-footer">
+                    <p>Don't have an account? <a href="#" onclick="showRegisterForm()">Sign up</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: linear-gradient(135deg, var(--xeox-dark) 0%, var(--xeox-deep) 100%); color: white; padding: 2rem 0; margin-top: 2rem;">
+        <div class="container text-center">
+            <p>&copy; 2024 Xeox. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Xeox Core JS -->
+    <script>
+        // Splash Screen and Login Modal Management
+        document.addEventListener('DOMContentLoaded', function() {
+            const splashScreen = document.getElementById('splash-screen');
+            const loginModal = document.getElementById('login-modal');
+
+            // Check if this is the first visit (no local storage for app session)
+            const hasSeenSplash = localStorage.getItem('camigo_app_opened');
+
+            if (!hasSeenSplash) {
+                // First time opening the app - show splash screen
+                localStorage.setItem('camigo_app_opened', 'true');
+
+                setTimeout(() => {
+                    splashScreen.classList.add('fade-out');
+
+                    // After splash fades out, show login modal if not authenticated
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                        if (!{{ user.is_authenticated|yesno:"true,false" }}) {
+                            showLoginModal();
+                        }
+                    }, 500);
+                }, 3000);
+            } else {
+                // Hide splash screen immediately
+                splashScreen.style.display = 'none';
+
+                // Show login modal only for xyz@gmail.com if not authenticated
+                if (!{{ user.is_authenticated|yesno:"true,false" }}) {
+                    showLoginModal();
+                }
+            }
+        });
+
+        // Show login modal
+        function showLoginModal() {
+            const loginModal = document.getElementById('login-modal');
+            loginModal.classList.add('show');
+        }
+
+        // Hide login modal
+        function hideLoginModal() {
+            const loginModal = document.getElementById('login-modal');
+            loginModal.classList.remove('show');
+        }
+
+        // Fill demo credentials
+        function fillDemoCredentials() {
+            document.getElementById('email').value = 'xyz@gmail.com';
+            document.getElementById('password').value = 'abcdefghijk';
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.password-toggle i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.className = 'fas fa-eye';
+            }
+        }
+
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = document.querySelector('.login-btn');
+            const btnText = document.querySelector('.btn-text');
+            const btnLoader = document.querySelector('.btn-loader');
+
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'block';
+
+            // Check demo credentials
+            if (email === 'xyz@gmail.com' && password === 'abcdefghijk') {
+                // Simulate login success
+                setTimeout(() => {
+                    hideLoginModal();
+                    // Redirect to login page with demo credentials
+                    window.location.href = '/accounts/login/?demo=true';
+                }, 1500);
+            } else {
+                // Try actual login
+                fetch('/accounts/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+                })
+                .then(response => {
+                    if (response.ok) {
+                        hideLoginModal();
+                        window.location.reload();
+                    } else {
+                        throw new Error('Login failed');
+                    }
+                })
+                .catch(error => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    btnText.style.display = 'block';
+                    btnLoader.style.display = 'none';
+
+                    // Show error
+                    alert('Invalid credentials. Try the demo account or register.');
+                });
+            }
+        });
+
+        // Show register form (placeholder)
+        function showRegisterForm() {
+            hideLoginModal();
+            window.location.href = '/accounts/register/';
+        }
+
+        // Global function to open create post page
+        function openCreateModal(type = 'text') {
+            {% if user.is_authenticated %}
+            window.location.href = '{% url "posts:create" %}';
+            {% else %}
+            showLoginModal();
+            {% endif %}
+        }
+
+        // Global function to open notifications
+        function openNotifications() {
+            {% if user.is_authenticated %}
+            window.location.href = '/notifications/';
+            {% else %}
+            showLoginModal();
+            {% endif %}
+        }
+
+        // Global function to open messages
+        function openMessages() {
+            {% if user.is_authenticated %}
+            window.location.href = '/messages/';
+            {% else %}
+            showLoginModal();
+            {% endif %}
+        }
+
+        // Stories functions
+        function openCreateStoryModal() {
+            {% if user.is_authenticated %}
+            alert('Story creation coming soon! 📸');
+            {% else %}
+            showLoginModal();
+            {% endif %}
+        }
+
+        function viewStory(storyId) {
+            {% if user.is_authenticated %}
+            alert(`Viewing story ${storyId} - Full story viewer coming soon! 👀`);
+            {% else %}
+            showLoginModal();
+            {% endif %}
+        }
+
+        // Check for new notifications and messages
+        function checkNotifications() {
+            {% if user.is_authenticated %}
+            // Check notifications
+            fetch('/api/notification-count/')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notification-badge');
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error checking notifications:', error));
+
+            // Check messages
+            fetch('/api/message-count/')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('message-badge');
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error checking messages:', error));
+            {% endif %}
+        }
+
+        // Initialize notification checking
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if user.is_authenticated %}
+            checkNotifications();
+            // Check every 30 seconds
+            setInterval(checkNotifications, 30000);
+            {% endif %}
+        });
+    </script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

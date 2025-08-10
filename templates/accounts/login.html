@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CAMIGO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--xeox-light) 0%, var(--xeox-rose) 50%, var(--xeox-mauve) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-primary);
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(42, 20, 75, 0.15);
+            padding: 3rem;
+            max-width: 400px;
+            width: 100%;
+            margin: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--xeox-purple), var(--xeox-mauve));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .logo-heart {
+            position: absolute;
+            top: -8px;
+            right: 45%;
+            color: var(--xeox-rose);
+            font-size: 1rem;
+        }
+
+        .welcome-text {
+            color: var(--xeox-mauve);
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            color: var(--xeox-dark);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            border: 2px solid var(--xeox-light);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-control:focus {
+            border-color: var(--xeox-purple);
+            box-shadow: 0 0 0 3px rgba(82, 41, 89, 0.1);
+            background: white;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, var(--xeox-purple), var(--xeox-mauve));
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(82, 41, 89, 0.3);
+            color: white;
+        }
+
+        .demo-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--xeox-light);
+        }
+
+        .demo-title {
+            color: var(--xeox-mauve);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .demo-btn {
+            background: rgba(130, 77, 105, 0.1);
+            border: 1px solid var(--xeox-mauve);
+            color: var(--xeox-mauve);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .demo-btn:hover {
+            background: var(--xeox-mauve);
+            color: white;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+
+            .logo-text {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-section">
+            <h1 class="logo-text">
+                CAM<i class="fas fa-heart logo-heart"></i>GO
+            </h1>
+            <p class="welcome-text">Welcome back to your social world</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}" class="form-label">
+                    <i class="fas fa-user me-2"></i>Username or Email
+                </label>
+                <input type="text"
+                       class="form-control"
+                       id="{{ form.username.id_for_label }}"
+                       name="{{ form.username.name }}"
+                       placeholder="Enter your username"
+                       required>
+                {% if form.username.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.username.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Password
+                </label>
+                <input type="password"
+                       class="form-control"
+                       id="{{ form.password.id_for_label }}"
+                       name="{{ form.password.name }}"
+                       placeholder="Enter your password"
+                       required>
+                {% if form.password.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.password.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt me-2"></i>Sign In to CAMIGO
+            </button>
+        </form>
+
+        <div class="demo-section">
+            <div class="demo-title">
+                <i class="fas fa-user-friends me-2"></i>Quick Demo Access
+            </div>
+            <button class="demo-btn" onclick="fillDemo('demo1', 'demo123')">
+                <i class="fas fa-user me-2"></i>Demo User 1
+            </button>
+            <button class="demo-btn" onclick="fillDemo('admin', 'admin123')">
+                <i class="fas fa-crown me-2"></i>Admin Account
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function fillDemo(username, password) {
+            document.getElementById('id_username').value = username;
+            document.getElementById('id_password').value = password;
+        }
+
+        // Add loading state to form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
+            submitBtn.disabled = true;
+
+            // Re-enable button after 5 seconds in case of error
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 5000);
+        });
+
+        // Add smooth focus animations
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+
+        // Auto-focus first input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('id_username').focus();
+        });
+    </script>
+</body>
+</html>

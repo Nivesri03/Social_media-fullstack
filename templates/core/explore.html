@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Explore - CAMIGO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-compass me-2"></i>Explore
+            </h2>
+            <p class="text-muted mb-4">Discover trending posts and popular content</p>
+        </div>
+    </div>
+    
+    <div class="posts-grid">
+        {% for post in posts %}
+        <div class="card post-preview hover-lift" data-post-id="{{ post.id }}">
+            {% if post.image %}
+            <img src="{{ post.image.url }}" alt="Post" class="card-img-top" 
+                 style="height: 250px; object-fit: cover;">
+            {% elif post.video %}
+            <div class="position-relative">
+                <video class="card-img-top" style="height: 250px; object-fit: cover;">
+                    <source src="{{ post.video.url }}" type="video/mp4">
+                </video>
+                <div class="position-absolute top-0 end-0 m-2">
+                    <i class="fas fa-video text-white"></i>
+                </div>
+            </div>
+            {% else %}
+            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" 
+                 style="height: 250px;">
+                <div class="text-center p-3">
+                    <i class="fas fa-quote-left fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">{{ post.content|truncatewords:10 }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card-img-overlay d-flex align-items-end p-0">
+                <div class="bg-dark bg-opacity-75 text-white p-2 w-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>@{{ post.author.username }}</small>
+                        <div>
+                            <span class="me-2">
+                                <i class="fas fa-heart"></i> {{ post.likes_count }}
+                            </span>
+                            <span>
+                                <i class="fas fa-comment"></i> {{ post.comments_count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4>No posts to explore</h4>
+            <p class="text-muted">Check back later for trending content!</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if posts.has_other_pages %}
+    <nav aria-label="Explore pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if posts.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ posts.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for num in posts.paginator.page_range %}
+            {% if posts.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+            
+            {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ posts.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Post Detail Modal -->
+<div class="modal fade" id="postDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Post Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="postDetailContent">
+                <!-- Post details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Post preview click handler
+document.addEventListener('click', function(e) {
+    const postPreview = e.target.closest('.post-preview');
+    if (postPreview) {
+        const postId = postPreview.dataset.postId;
+        loadPostDetail(postId);
+    }
+});
+
+function loadPostDetail(postId) {
+    fetch(`/posts/${postId}/`)
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('postDetailContent').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('postDetailModal')).show();
+    })
+    .catch(error => console.error('Error loading post:', error));
+}
+</script>
+{% endblock %}

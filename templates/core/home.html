@@ -1,0 +1,807 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load xeox_extras %}
+
+{% block title %}Home - CAMIGO{% endblock %}
+
+{% block content %}
+<div class="feed-container">
+    <!-- Stories Section -->
+    {% if user.is_authenticated %}
+    <div class="stories-container">
+        <div class="stories-scroll">
+            <!-- Add Story -->
+            <div class="story-item add-story" onclick="openCreateStoryModal()">
+                <div class="story-avatar">
+                    <div class="add-story-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <span class="story-username">Your Story</span>
+            </div>
+
+            <!-- User Stories (placeholder for now) -->
+            <div class="story-item" onclick="viewStory(1)">
+                <div class="story-avatar">
+                    <div class="default-avatar">D</div>
+                </div>
+                <span class="story-username">demo1</span>
+            </div>
+            <div class="story-item" onclick="viewStory(2)">
+                <div class="story-avatar viewed">
+                    <div class="default-avatar">J</div>
+                </div>
+                <span class="story-username">demo2</span>
+            </div>
+            <div class="story-item" onclick="viewStory(3)">
+                <div class="story-avatar">
+                    <div class="default-avatar">M</div>
+                </div>
+                <span class="story-username">demo3</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Create Post Section -->
+    {% if user.is_authenticated %}
+    <div class="post-card">
+        <div class="post-header">
+            {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="post-avatar">
+            {% else %}
+            <div class="post-avatar bg-secondary d-flex align-items-center justify-content-center text-white"
+                 style="font-size: 16px;">
+                {{ user.username|first|upper }}
+            </div>
+            {% endif %}
+            <div class="post-user-info flex-grow-1">
+                <button class="btn btn-outline-secondary w-100 text-start"
+                        onclick="openCreateModal()" style="border-radius: 20px;">
+                    What's on your mind, {{ user.first_name|default:user.username }}?
+                </button>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+    <!-- Posts Feed -->
+    {% for post in posts %}
+    <div class="post-card">
+        <!-- Post Header -->
+        <div class="post-header">
+            <a href="{% url 'accounts:profile' post.author.username %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.75rem;">
+                {% if post.author.profile_picture %}
+                <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}" class="post-avatar">
+                {% else %}
+                <div class="post-avatar bg-secondary d-flex align-items-center justify-content-center text-white"
+                     style="font-size: 16px;">
+                    {{ post.author.username|first|upper }}
+                </div>
+                {% endif %}
+                <div class="post-user-info">
+                    <h6>{{ post.author.get_full_name|default:post.author.username }}</h6>
+                    <small>{{ post.created_at|timesince }} ago</small>
+                </div>
+            </a>
+            {% if post.author == user %}
+            <button class="header-btn" style="background: none; color: var(--xeox-mauve);" onclick="togglePostMenu({{ post.id }})">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Post Media -->
+        {% if post.image %}
+        <img src="{{ post.image.url }}" alt="Post image" class="post-media">
+        {% elif post.video %}
+        <video controls class="post-media">
+            <source src="{{ post.video.url }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        {% endif %}
+
+        <!-- Post Stats -->
+        <div class="post-stats">
+            <strong>{{ post.likes_count }}</strong> likes
+        </div>
+
+        <!-- Post Actions -->
+        <div class="post-actions">
+            <button class="action-btn like-btn {% if post.user_has_liked %}liked{% endif %}"
+                    data-post-id="{{ post.id }}">
+                <i class="{% if post.user_has_liked %}fas{% else %}far{% endif %} fa-heart"></i>
+                <span>{{ post.likes_count }}</span>
+            </button>
+
+            <button class="action-btn comment-toggle" onclick="openCommentPanel({{ post.id }})">
+                <i class="far fa-comment"></i>
+                <span>{{ post.comments_count }}</span>
+            </button>
+
+            <button class="action-btn share-btn" data-post-id="{{ post.id }}">
+                <i class="far fa-paper-plane"></i>
+                <span>{{ post.shares_count }}</span>
+            </button>
+
+            <button class="action-btn save-btn {% if post.user_has_saved %}saved{% endif %}"
+                    data-post-id="{{ post.id }}" style="margin-left: auto;">
+                <i class="{% if post.user_has_saved %}fas{% else %}far{% endif %} fa-bookmark"></i>
+            </button>
+        </div>
+
+        <!-- Post Content (moved below actions) -->
+        {% if post.content %}
+        <div class="post-content">
+            <p>{{ post.content|linebreaks }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Post Caption (moved below actions) -->
+        {% if post.caption %}
+        <div class="post-content" style="margin-top: 0.5rem;">
+            <p style="font-style: italic; color: var(--xeox-mauve);">{{ post.caption|linebreaks }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Comments Section -->
+        <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+            {% for comment in post.comments.all|slice:":3" %}
+            <div class="comment-item">
+                {% if comment.author.profile_picture %}
+                <img src="{{ comment.author.profile_picture.url }}" alt="{{ comment.author.username }}" class="comment-avatar">
+                {% else %}
+                <div class="comment-avatar bg-secondary d-flex align-items-center justify-content-center text-white"
+                     style="font-size: 12px;">
+                    {{ comment.author.username|first|upper }}
+                </div>
+                {% endif %}
+                <div class="comment-content">
+                    <div class="comment-author">{{ comment.author.username }}</div>
+                    <div class="comment-text">{{ comment.content }}</div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if user.is_authenticated %}
+            <form class="comment-form" data-post-id="{{ post.id }}">
+                {% csrf_token %}
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="comment-avatar">
+                {% else %}
+                <div class="comment-avatar bg-secondary d-flex align-items-center justify-content-center text-white"
+                     style="font-size: 12px;">
+                    {{ user.username|first|upper }}
+                </div>
+                {% endif %}
+                <input type="text" name="content" class="comment-input" placeholder="Add a comment..." required>
+                <button type="submit" class="comment-submit">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="post-card text-center" style="padding: 3rem 1rem;">
+        <i class="fas fa-camera fa-3x" style="color: var(--xeox-mauve); margin-bottom: 1rem;"></i>
+        <h4 style="color: var(--xeox-dark);">No posts yet</h4>
+        <p style="color: var(--xeox-mauve);">Start following people or create your first post!</p>
+        {% if user.is_authenticated %}
+        <button class="action-btn" onclick="openCreateModal()" style="background: linear-gradient(135deg, var(--xeox-purple), var(--xeox-mauve)); color: white; padding: 0.75rem 1.5rem;">
+            <i class="fas fa-plus"></i>
+            <span>Create Your First Post</span>
+        </button>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <!-- Load More Button -->
+    {% if posts.has_next %}
+    <div class="text-center" style="margin: 2rem 0;">
+        <a href="?page={{ posts.next_page_number }}" class="action-btn" style="background: var(--xeox-light); color: var(--xeox-purple); padding: 0.75rem 2rem;">
+            <i class="fas fa-chevron-down"></i>
+            <span>Load More</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- Create Post Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="createPostModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: var(--border-radius);">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--xeox-purple), var(--xeox-mauve)); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>Create Post
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createPostForm" method="post" action="{% url 'posts:create' %}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+
+                    <!-- User Info -->
+                    <div class="d-flex align-items-center mb-3">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="post-avatar me-3">
+                        {% else %}
+                        <div class="post-avatar bg-secondary d-flex align-items-center justify-content-center text-white me-3" style="font-size: 16px;">
+                            {{ user.username|first|upper }}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0" style="color: var(--xeox-dark);">{{ user.get_full_name|default:user.username }}</h6>
+                            <small style="color: var(--xeox-mauve);">@{{ user.username }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Post Content -->
+                    <div class="mb-3">
+                        <textarea name="content" id="postContent" class="form-control" rows="4" placeholder="What's on your mind?" style="border: 2px solid rgba(42, 20, 75, 0.1); border-radius: var(--border-radius-sm); resize: none;"></textarea>
+                        <div class="form-text" style="color: var(--xeox-mauve);">
+                            <span id="contentCount">0</span>/2000 characters
+                        </div>
+                    </div>
+
+                    <!-- Caption for Media -->
+                    <div id="captionSection" class="mb-3" style="display: none;">
+                        <label class="form-label" style="color: var(--xeox-dark); font-weight: 600;">
+                            <i class="fas fa-quote-left me-2" style="color: var(--xeox-purple);"></i>Caption
+                        </label>
+                        <textarea name="caption" id="postCaption" class="form-control" rows="2" placeholder="Write a caption for your photo/video..." style="border: 2px solid rgba(42, 20, 75, 0.1); border-radius: var(--border-radius-sm); resize: none;"></textarea>
+                        <div class="form-text" style="color: var(--xeox-mauve);">
+                            <span id="captionCount">0</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Media Upload -->
+                    <div class="mb-3">
+                        <div class="media-upload-area" style="border: 2px dashed rgba(42, 20, 75, 0.2); border-radius: var(--border-radius-sm); padding: 2rem; text-align: center; background: var(--xeox-light);">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt fa-2x" style="color: var(--xeox-mauve); margin-bottom: 1rem;"></i>
+                                <p style="color: var(--xeox-dark); margin-bottom: 1rem;">Drag & drop photos or videos here</p>
+                                <div class="upload-buttons">
+                                    <label for="imageUpload" class="btn btn-outline-primary me-2">
+                                        <i class="fas fa-image me-1"></i>Photo
+                                    </label>
+                                    <label for="videoUpload" class="btn btn-outline-primary">
+                                        <i class="fas fa-video me-1"></i>Video
+                                    </label>
+                                </div>
+                                <input type="file" id="imageUpload" name="image" accept="image/*" style="display: none;" onchange="previewMedia(this, 'image')">
+                                <input type="file" id="videoUpload" name="video" accept="video/*" style="display: none;" onchange="previewMedia(this, 'video')">
+                            </div>
+                            <div id="mediaPreview" style="display: none; margin-top: 1rem;">
+                                <div class="preview-container" style="position: relative; display: inline-block;">
+                                    <img id="imagePreview" style="max-width: 100%; max-height: 200px; border-radius: var(--border-radius-sm); display: none;">
+                                    <video id="videoPreview" controls style="max-width: 100%; max-height: 200px; border-radius: var(--border-radius-sm); display: none;"></video>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeMedia()" style="position: absolute; top: 0.5rem; right: 0.5rem;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Post Type -->
+                    <div class="mb-3">
+                        <select name="post_type" class="form-select" style="border: 2px solid rgba(42, 20, 75, 0.1); border-radius: var(--border-radius-sm);">
+                            <option value="text">Text Post</option>
+                            <option value="image">Photo Post</option>
+                            <option value="video">Video Post</option>
+                            <option value="reel">Reel</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn" id="postSubmitBtn" style="background: linear-gradient(135deg, var(--xeox-purple), var(--xeox-mauve)); color: white;">
+                        <span class="btn-text">Share Post</span>
+                        <div class="btn-loader" style="display: none;">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Split View Comment Section -->
+<div class="split-view-overlay" id="splitViewOverlay" onclick="closeSplitView()">
+    <div class="split-view-container" onclick="event.stopPropagation()">
+        <!-- Post Section (Left Side) -->
+        <div class="split-view-post">
+            <div class="split-view-post-card" id="splitViewPostCard">
+                <!-- Post will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Comments Section (Right Side) -->
+        <div class="split-view-comments">
+            <div class="split-view-header">
+                <h3 class="split-view-title">Comments</h3>
+                <button class="split-view-close" onclick="closeSplitView()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="split-view-comments-content" id="splitViewCommentsContent">
+                <!-- Comments will be loaded here -->
+            </div>
+
+            <div class="split-view-comments-form" id="splitViewCommentsForm">
+                <!-- Comment form will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Open create post page
+function openCreateModal(type = 'text') {
+    window.location.href = '{% url "posts:create" %}';
+}
+
+// Open split view
+function openCommentPanel(postId) {
+    const overlay = document.getElementById('splitViewOverlay');
+
+    // Load post data and comments
+    loadSplitViewData(postId);
+
+    // Show overlay
+    overlay.classList.add('active');
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+// Close split view
+function closeSplitView() {
+    const overlay = document.getElementById('splitViewOverlay');
+
+    overlay.classList.remove('active');
+    setTimeout(() => {
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+// Load split view data
+function loadSplitViewData(postId) {
+    // Find the post element
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`).closest('.post-card');
+    const commentsSection = postElement.querySelector('.comments-section');
+
+    // Clone the entire post for the right side
+    const postClone = postElement.cloneNode(true);
+
+    // Remove the comments section from the clone (we'll show it on the left)
+    const cloneCommentsSection = postClone.querySelector('.comments-section');
+    if (cloneCommentsSection) {
+        cloneCommentsSection.remove();
+    }
+
+    // Update the post card in split view
+    const splitViewPostCard = document.getElementById('splitViewPostCard');
+    splitViewPostCard.innerHTML = postClone.innerHTML;
+
+    // Load comments in the left panel
+    const splitViewCommentsContent = document.getElementById('splitViewCommentsContent');
+    if (commentsSection && commentsSection.innerHTML.trim()) {
+        // Copy existing comments
+        splitViewCommentsContent.innerHTML = commentsSection.innerHTML.replace(/comment-form.*?<\/form>/s, '');
+    } else {
+        splitViewCommentsContent.innerHTML = '<p style="text-align: center; color: var(--xeox-mauve); padding: 2rem;">No comments yet. Be the first to comment!</p>';
+    }
+
+    // Add comment form to the left panel
+    const splitViewCommentsForm = document.getElementById('splitViewCommentsForm');
+    splitViewCommentsForm.innerHTML = `
+        <form class="comment-form" data-post-id="${postId}">
+            {% csrf_token %}
+            {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="comment-avatar">
+            {% else %}
+            <div class="comment-avatar bg-secondary d-flex align-items-center justify-content-center text-white" style="font-size: 12px;">
+                {{ user.username|first|upper }}
+            </div>
+            {% endif %}
+            <input type="text" name="content" class="comment-input" placeholder="Add a comment..." required>
+            <button type="submit" class="comment-submit">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    `;
+}
+
+// Toggle comments (keep for backward compatibility)
+function toggleComments(postId) {
+    openCommentPanel(postId);
+}
+
+// Like post functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.like-btn')) {
+        e.preventDefault();
+        const btn = e.target.closest('.like-btn');
+        const postId = btn.dataset.postId;
+
+        fetch('/posts/like/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: `post_id=${postId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            const icon = btn.querySelector('i');
+            const count = btn.querySelector('span');
+
+            if (data.status === 'liked') {
+                btn.classList.add('liked');
+                icon.className = 'fas fa-heart';
+            } else {
+                btn.classList.remove('liked');
+                icon.className = 'far fa-heart';
+            }
+            count.textContent = data.likes_count;
+        });
+    }
+});
+
+// Save post functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.save-btn')) {
+        e.preventDefault();
+        const btn = e.target.closest('.save-btn');
+        const postId = btn.dataset.postId;
+
+        fetch('/posts/save/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: `post_id=${postId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            const icon = btn.querySelector('i');
+
+            if (data.status === 'saved') {
+                btn.classList.add('saved');
+                icon.className = 'fas fa-bookmark';
+            } else {
+                btn.classList.remove('saved');
+                icon.className = 'far fa-bookmark';
+            }
+        });
+    }
+});
+
+// Share post functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.share-btn')) {
+        e.preventDefault();
+        const btn = e.target.closest('.share-btn');
+        const postId = btn.dataset.postId;
+
+        // Simple share functionality - copy link to clipboard
+        const url = `${window.location.origin}/posts/${postId}/`;
+        navigator.clipboard.writeText(url).then(() => {
+            // Record the share
+            fetch('/posts/share/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: `post_id=${postId}&share_type=link`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const count = btn.querySelector('span');
+                count.textContent = data.shares_count;
+
+                // Show feedback
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>Copied!</span>';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    }
+});
+
+// Comment form submission
+document.addEventListener('submit', function(e) {
+    if (e.target.classList.contains('comment-form')) {
+        e.preventDefault();
+        const form = e.target;
+        const postId = form.dataset.postId;
+        const content = form.querySelector('input[name="content"]').value;
+
+        if (!content.trim()) return;
+
+        fetch('/posts/comment/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: `post_id=${postId}&content=${encodeURIComponent(content)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Add comment to both the original comments section and panel
+                const commentHTML = `
+                    <div class="comment-item">
+                        <div class="comment-avatar bg-secondary d-flex align-items-center justify-content-center text-white" style="font-size: 12px;">
+                            ${data.comment.author.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="comment-content">
+                            <div class="comment-author">${data.comment.author}</div>
+                            <div class="comment-text">${data.comment.content}</div>
+                        </div>
+                    </div>
+                `;
+
+                // Add to original comments section if it exists
+                const commentsSection = document.getElementById(`comments-${postId}`);
+                if (commentsSection) {
+                    commentsSection.insertAdjacentHTML('beforeend', commentHTML);
+                }
+
+                // Add to split view comments if it's open
+                const splitViewComments = document.getElementById('splitViewCommentsContent');
+                if (splitViewComments && splitViewComments.innerHTML.includes('No comments yet')) {
+                    splitViewComments.innerHTML = commentHTML;
+                } else if (splitViewComments) {
+                    splitViewComments.insertAdjacentHTML('beforeend', commentHTML);
+                }
+
+                // Clear form
+                form.querySelector('input[name="content"]').value = '';
+
+                // Update comment count
+                const commentBtns = document.querySelectorAll(`[onclick="openCommentPanel(${postId})"] span`);
+                commentBtns.forEach(btn => btn.textContent = data.comments_count);
+            }
+        });
+    }
+});
+
+// Enhanced Post Creation
+function previewMedia(input, type) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        const preview = document.getElementById('mediaPreview');
+        const imagePreview = document.getElementById('imagePreview');
+        const videoPreview = document.getElementById('videoPreview');
+        const captionSection = document.getElementById('captionSection');
+
+        reader.onload = function(e) {
+            preview.style.display = 'block';
+            captionSection.style.display = 'block';
+
+            if (type === 'image') {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                videoPreview.style.display = 'none';
+                // Auto-select image post type
+                document.querySelector('select[name="post_type"]').value = 'image';
+            } else if (type === 'video') {
+                videoPreview.src = e.target.result;
+                videoPreview.style.display = 'block';
+                imagePreview.style.display = 'none';
+                // Auto-select video post type
+                document.querySelector('select[name="post_type"]').value = 'video';
+            }
+        };
+
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeMedia() {
+    document.getElementById('mediaPreview').style.display = 'none';
+    document.getElementById('imageUpload').value = '';
+    document.getElementById('videoUpload').value = '';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('videoPreview').src = '';
+    document.querySelector('select[name="post_type"]').value = 'text';
+}
+
+// Handle create post form submission
+document.getElementById('createPostForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const submitBtn = document.getElementById('postSubmitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoader = submitBtn.querySelector('.btn-loader');
+
+    // Show loading state
+    submitBtn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'inline-block';
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.text();
+        }
+        throw new Error('Failed to create post');
+    })
+    .then(html => {
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('createPostModal'));
+        modal.hide();
+
+        // Reset form
+        form.reset();
+        removeMedia();
+
+        // Show success message
+        showNotification('Post shared successfully!', 'success');
+
+        // Reload page to show new post
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to share post. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+    });
+});
+
+// Show notification function
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    notification.style.position = 'fixed';
+    notification.style.top = '80px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Real-time notifications (placeholder for future WebSocket implementation)
+function initializeRealTimeNotifications() {
+    // This would connect to WebSocket for real-time notifications
+    // For now, we'll simulate with periodic checks
+    setInterval(() => {
+        // Check for new notifications every 30 seconds
+        if (document.querySelector('.nav-item.active')) {
+            // User is active, check for notifications
+            // This would be replaced with WebSocket implementation
+        }
+    }, 30000);
+}
+
+// Keyboard support for split view
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const overlay = document.getElementById('splitViewOverlay');
+        if (overlay.classList.contains('active')) {
+            closeSplitView();
+        }
+    }
+});
+
+// Character counting for post content and caption
+document.addEventListener('DOMContentLoaded', function() {
+    const postContent = document.getElementById('postContent');
+    const postCaption = document.getElementById('postCaption');
+    const contentCount = document.getElementById('contentCount');
+    const captionCount = document.getElementById('captionCount');
+
+    if (postContent && contentCount) {
+        postContent.addEventListener('input', function() {
+            const count = this.value.length;
+            contentCount.textContent = count;
+            contentCount.style.color = count > 2000 ? '#ff4757' : 'var(--xeox-mauve)';
+        });
+    }
+
+    if (postCaption && captionCount) {
+        postCaption.addEventListener('input', function() {
+            const count = this.value.length;
+            captionCount.textContent = count;
+            captionCount.style.color = count > 500 ? '#ff4757' : 'var(--xeox-mauve)';
+        });
+    }
+
+    initializeRealTimeNotifications();
+    initializeTimeTracking();
+});
+
+// Time tracking functionality
+function initializeTimeTracking() {
+    const startTime = Date.now();
+    const existingTime = parseInt(localStorage.getItem('xeox_time_spent') || '0');
+
+    function updateTimeDisplay() {
+        const currentSession = Date.now() - startTime;
+        const totalTime = existingTime + currentSession;
+        const hours = Math.floor(totalTime / (1000 * 60 * 60));
+        const minutes = Math.floor((totalTime % (1000 * 60 * 60)) / (1000 * 60));
+
+        const timeElement = document.getElementById('timeSpent');
+        if (timeElement) {
+            timeElement.textContent = `${hours}h ${minutes}m`;
+        }
+    }
+
+    // Update every minute
+    setInterval(updateTimeDisplay, 60000);
+    updateTimeDisplay();
+
+    // Save time when leaving page
+    window.addEventListener('beforeunload', function() {
+        const currentSession = Date.now() - startTime;
+        const totalTime = existingTime + currentSession;
+        localStorage.setItem('xeox_time_spent', totalTime.toString());
+    });
+}
+
+// Dropdown menu functions
+function showLikedPosts() {
+    window.location.href = '/accounts/profile/{{ user.username }}/#liked';
+}
+
+function showSavedPosts() {
+    window.location.href = '/accounts/profile/{{ user.username }}/#saved';
+}
+
+function showTimeTracking() {
+    const timeSpent = document.getElementById('timeSpent').textContent;
+    alert(`You've spent ${timeSpent} on Xeox today! 🎉\n\nThanks for being part of our community!`);
+}
+</script>
+{% endblock %}

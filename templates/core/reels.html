@@ -1,0 +1,1473 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load xeox_extras %}
+
+{% block title %}Reels - CAMIGO{% endblock %}
+
+{% block extra_css %}
+<style>
+.reels-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0.5rem;
+    height: 95vh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.reels-container::-webkit-scrollbar {
+    display: none;
+}
+
+.reel-item {
+    position: relative;
+    width: 100%;
+    height: 85vh;
+    max-height: 750px;
+    min-height: 500px;
+    scroll-snap-align: start;
+    margin-bottom: 1rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(42, 20, 75, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.reel-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.reel-video-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.reel-right-content {
+    width: 250px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border-left: 1px solid rgba(42, 20, 75, 0.1);
+    overflow-y: auto;
+}
+
+.reel-video-container {
+    position: relative;
+    width: 100%;
+    height: 480px;
+    background: #000;
+    flex-shrink: 0;
+}
+
+.reel-player {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #000;
+}
+
+.reel-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 80px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 1.5rem 1rem 1rem;
+    color: white;
+    z-index: 10;
+}
+
+.reel-right-content .reel-profile-pic {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--xeox-purple);
+    font-size: 16px;
+}
+
+.reel-right-content .reel-user-profile {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(42, 20, 75, 0.1);
+}
+
+.reel-right-content .reel-caption {
+    margin-bottom: 1rem;
+    max-height: 100px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--xeox-purple) transparent;
+}
+
+.reel-right-content .reel-caption::-webkit-scrollbar {
+    width: 4px;
+}
+
+.reel-right-content .reel-caption::-webkit-scrollbar-thumb {
+    background: var(--xeox-purple);
+    border-radius: 2px;
+}
+
+.reel-right-content .reel-description {
+    margin-bottom: 1rem;
+    color: var(--xeox-dark);
+    line-height: 1.5;
+}
+
+.reel-right-content .reel-hashtags {
+    margin-bottom: 1rem;
+}
+
+.reel-right-content .reel-hashtags a {
+    color: var(--xeox-purple);
+    text-decoration: none;
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.reel-right-content .reel-hashtags a:hover {
+    text-decoration: underline;
+}
+
+.reel-right-content .reel-social-actions {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(42, 20, 75, 0.1);
+}
+
+.reel-social-btn {
+    background: var(--xeox-purple);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.reel-social-btn:hover {
+    background: var(--xeox-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(42, 20, 75, 0.3);
+}
+
+.reel-social-btn.liked {
+    background: #ff3040;
+}
+
+.reel-social-btn.saved {
+    background: #ffc107;
+    color: #000;
+}
+
+.reel-social-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(42, 20, 75, 0.3);
+}
+
+.reel-social-btn .like-count,
+.reel-social-btn .comments-count,
+.reel-social-btn .shares-count {
+    font-weight: 600;
+}
+
+.reel-actions {
+    position: absolute;
+    right: 1rem;
+    bottom: 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: center;
+    z-index: 10;
+}
+
+.reel-action-btn {
+    background: rgba(255,255,255,0.9);
+    border: none;
+    color: var(--xeox-purple);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.reel-action-btn:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.reel-action-btn.liked {
+    color: #ff3040;
+    background: rgba(255,48,64,0.9);
+}
+
+.reel-action-count {
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 0.2rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.reel-author {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.reel-author img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 0.75rem;
+    border: 2px solid white;
+}
+
+.reel-content {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+.reel-hashtags {
+    font-size: 0.85rem;
+    color: #4FC3F7;
+    margin-top: 0.5rem;
+}
+
+.reel-hashtags a {
+    color: #4FC3F7;
+    text-decoration: none;
+    margin-right: 0.5rem;
+}
+
+.reel-hashtags a:hover {
+    text-decoration: underline;
+}
+
+.reel-info {
+    padding: 0.75rem;
+    background: white;
+    flex-grow: 1;
+    min-height: 120px;
+}
+
+.reel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.reel-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.reel-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--xeox-purple);
+}
+
+.reel-user-details h6 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--xeox-dark);
+}
+
+.reel-user-details small {
+    color: var(--xeox-mauve);
+}
+
+.reel-description {
+    color: var(--xeox-dark);
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+}
+
+.reel-hashtags-bottom {
+    color: var(--xeox-purple);
+    font-size: 0.9rem;
+}
+
+.reel-hashtags-bottom a {
+    color: var(--xeox-purple);
+    text-decoration: none;
+    margin-right: 0.5rem;
+}
+
+.reel-hashtags-bottom a:hover {
+    text-decoration: underline;
+}
+
+.sound-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    color: var(--xeox-purple);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    z-index: 15;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.sound-btn:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.sound-btn.muted {
+    color: #ff6b6b;
+}
+
+.sound-btn.unmuted {
+    color: #51cf66;
+}
+
+.page-header {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(42, 20, 75, 0.15);
+    margin: 0;
+    transition: all 0.3s ease;
+    animation: fadeInLeft 0.6s ease-out;
+}
+
+.page-header:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 6px 20px rgba(42, 20, 75, 0.2);
+}
+
+.page-header h1 {
+    color: var(--xeox-dark);
+    font-size: 1.5rem;
+    margin: 0;
+    font-weight: 700;
+}
+
+.page-header p {
+    display: none; /* Hide description to save space */
+}
+
+.create-reel-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    background: linear-gradient(135deg, var(--xeox-purple), var(--xeox-dark));
+    color: white;
+    border: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 20px rgba(42, 20, 75, 0.3);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    animation: fadeInRight 0.6s ease-out, pulse 2s infinite;
+}
+
+.create-reel-btn:hover {
+    background: linear-gradient(135deg, var(--xeox-dark), var(--xeox-purple));
+    transform: scale(1.15);
+    box-shadow: 0 8px 30px rgba(42, 20, 75, 0.5);
+    color: white;
+    animation: none;
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(42, 20, 75, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(42, 20, 75, 0.5);
+    }
+}
+
+.reels-main-container {
+    height: 100vh;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+.scroll-indicator {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    color: var(--xeox-purple);
+    font-size: 1.5rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(-50%);
+    }
+    40% {
+        transform: translateY(-60%);
+    }
+    60% {
+        transform: translateY(-40%);
+    }
+}
+
+/* Delete modal styling */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px 15px 0 0;
+}
+
+.reel-thumbnail {
+    background: linear-gradient(45deg, #000, #333) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .reels-container {
+        max-width: 100%;
+        padding: 0.25rem;
+        height: 100vh;
+    }
+
+    .reel-item {
+        height: 90vh;
+        max-height: 650px;
+        min-height: 450px;
+        margin-bottom: 0.5rem;
+        flex-direction: column;
+    }
+
+    .reel-right-content {
+        width: 100%;
+        height: 200px;
+        border-left: none;
+        border-top: 1px solid rgba(42, 20, 75, 0.1);
+        padding: 0.75rem;
+    }
+
+    .reel-video-container {
+        height: 350px;
+    }
+
+    .page-header {
+        top: 15px;
+        left: 15px;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .create-reel-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+    }
+
+    .sound-btn {
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .reels-container {
+        max-width: 100%;
+        padding: 0.1rem;
+        height: 100vh;
+    }
+
+    .reel-item {
+        height: 95vh;
+        max-height: 600px;
+        min-height: 400px;
+        margin-bottom: 0.2rem;
+    }
+
+    .reel-right-content {
+        height: 180px;
+        padding: 0.5rem;
+    }
+
+    .reel-video-container {
+        height: 300px;
+    }
+
+    .reel-right-content .reel-profile-pic {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+
+    .reel-social-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .page-header {
+        top: 10px;
+        left: 10px;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .create-reel-btn {
+        bottom: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Large screens optimization */
+@media (min-width: 1200px) {
+    .reel-item {
+        height: 80vh;
+        max-height: 700px;
+    }
+
+    .reel-video-container {
+        height: 450px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reels-main-container">
+    <!-- Floating Page Header -->
+    <div class="page-header">
+        <h1>Reels</h1>
+    </div>
+
+    <!-- Floating Create Reel Button -->
+    {% if user.is_authenticated %}
+    <a href="{% url 'posts:create' %}?type=reel" class="create-reel-btn" title="Create Reel">
+        <i class="fas fa-plus"></i>
+    </a>
+    {% endif %}
+
+<div class="reels-container" id="reelsContainer">
+    {% for reel in reels %}
+    <div class="reel-item" data-reel-id="{{ reel.id }}" data-video-id="{{ reel.youtube_video_id }}">
+        <!-- Left Side Video -->
+        <div class="reel-video-section">
+            <div class="reel-video-container">
+                {% if reel.youtube_video_id %}
+                <iframe
+                    class="reel-player"
+                    data-video-id="{{ reel.youtube_video_id }}"
+                    src="https://www.youtube.com/embed/{{ reel.youtube_video_id }}?autoplay={% if forloop.first %}1{% else %}0{% endif %}&mute=1&loop=1&playlist={{ reel.youtube_video_id }}&controls=1&showinfo=0&rel=0&modestbranding=1&playsinline=1"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+
+                <!-- Sound Control Button -->
+                <button class="sound-btn muted" data-video-id="{{ reel.youtube_video_id }}" title="Tap for Sound">
+                    <i class="fas fa-volume-mute"></i>
+                </button>
+                {% elif reel.video %}
+                <video class="reel-player" loop muted autoplay>
+                    <source src="{{ reel.video.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                {% elif reel.image %}
+                <img src="{{ reel.image.url }}" alt="Reel image" class="reel-player" style="object-fit: cover;">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Side Content -->
+        <div class="reel-right-content">
+            <!-- User Profile Info -->
+            <div class="reel-user-profile">
+                <a href="{% url 'accounts:profile' reel.author.username %}" class="d-flex align-items-center text-decoration-none mb-2">
+                    {% if reel.author.profile_picture %}
+                    <img src="{{ reel.author.profile_picture.url }}" alt="{{ reel.author.username }}" class="reel-profile-pic me-2">
+                    {% else %}
+                    <div class="reel-profile-pic bg-secondary d-flex align-items-center justify-content-center text-white me-2">
+                        {{ reel.author.username|first|upper }}
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h6 class="mb-0" style="font-weight: 600; color: var(--xeox-dark);">{{ reel.author.get_full_name|default:reel.author.username }}</h6>
+                        <small class="text-muted">{{ reel.created_at|timesince }} ago</small>
+                    </div>
+                </a>
+                {% if user.is_authenticated and user != reel.author %}
+                <button class="btn btn-sm btn-outline-primary follow-btn"
+                        data-username="{{ reel.author.username }}">
+                    Follow
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Caption -->
+            {% if reel.caption %}
+            <div class="reel-caption">
+                <h6 style="color: var(--xeox-purple); font-size: 0.9rem; margin-bottom: 0.5rem;">Caption:</h6>
+                <p style="color: var(--xeox-dark); font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;">{{ reel.caption }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Content Description -->
+            {% if reel.content %}
+            <div class="reel-description">
+                <h6 style="color: var(--xeox-purple); font-size: 0.9rem; margin-bottom: 0.5rem;">Description:</h6>
+                <p style="color: var(--xeox-dark); font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;">{{ reel.content }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Hashtags -->
+            <div class="reel-hashtags">
+                <h6 style="color: var(--xeox-purple); font-size: 0.9rem; margin-bottom: 0.5rem;">Tags:</h6>
+                <a href="#">#viral</a>
+                <a href="#">#trending</a>
+                <a href="#">#camigo</a>
+                <a href="#">#reels</a>
+            </div>
+
+            <!-- Social Actions -->
+            <div class="reel-social-actions">
+                {% if user.is_authenticated %}
+                <button class="reel-social-btn like-btn {% if reel.user_has_liked %}liked{% endif %}"
+                        data-post-id="{{ reel.id }}">
+                    <i class="{% if reel.user_has_liked %}fas{% else %}far{% endif %} fa-heart"></i>
+                    <span>Like (<span class="like-count">{{ reel.likes_count }}</span>)</span>
+                </button>
+                {% endif %}
+
+                <button class="reel-social-btn comment-btn" data-reel-id="{{ reel.id }}">
+                    <i class="far fa-comment"></i>
+                    <span>Comment (<span class="comments-count">{{ reel.comments_count }}</span>)</span>
+                </button>
+
+                <button class="reel-social-btn share-btn" data-post-id="{{ reel.id }}">
+                    <i class="far fa-paper-plane"></i>
+                    <span>Share (<span class="shares-count">{{ reel.shares_count }}</span>)</span>
+                </button>
+
+                {% if user.is_authenticated %}
+                <button class="reel-social-btn save-btn {% if reel.user_has_saved %}saved{% endif %}"
+                        data-post-id="{{ reel.id }}">
+                    <i class="{% if reel.user_has_saved %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                    <span>Save</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator" id="scrollIndicator">
+        <i class="fas fa-chevron-down"></i>
+    </div>
+
+    {% if not reels %}
+    <div class="text-center py-5">
+        <i class="fas fa-video fa-3x text-muted mb-3"></i>
+        <h4>No reels yet</h4>
+        <p class="text-muted">Be the first to share a reel!</p>
+    </div>
+    {% endif %}
+</div>
+</div>
+
+    {% if not reels %}
+    <div class="text-center py-5">
+        <i class="fas fa-video fa-3x text-muted mb-3"></i>
+        <h4>No reels yet</h4>
+        <p class="text-muted">Be the first to share a reel!</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'posts:create' %}" class="btn btn-primary">Create Your First Reel</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Comment Modal -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="commentModalLabel">
+                    <i class="far fa-comment me-2"></i>Comments
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="commentsList" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                    <p class="text-muted text-center">No comments yet. Be the first to comment!</p>
+                </div>
+                {% if user.is_authenticated %}
+                <div class="d-flex gap-2">
+                    <input type="text" id="commentInput" class="form-control" placeholder="Add a comment..." maxlength="500">
+                    <button type="button" id="submitComment" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">
+                    <a href="{% url 'accounts:login' %}">Login</a> to comment
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Reel Modal -->
+<div class="modal fade" id="deleteReelModal" tabindex="-1" aria-labelledby="deleteReelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="deleteReelModalLabel">
+                    <i class="fas fa-trash-alt text-danger me-2"></i>Delete Reel
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="text-center mb-3">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <h6>Are you sure you want to delete this reel?</h6>
+                    <p class="text-muted mb-0">This action cannot be undone. The reel will be permanently removed from your profile and the reels feed.</p>
+                </div>
+                <div class="reel-preview-container" id="reelPreviewContainer" style="display: none;">
+                    <div class="card">
+                        <div class="card-body p-2">
+                            <div class="d-flex align-items-center">
+                                <div class="reel-thumbnail me-3" style="width: 60px; height: 60px; background: #000; border-radius: 8px; position: relative;">
+                                    <i class="fab fa-youtube text-danger" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1" id="reelContentPreview">Reel content...</h6>
+                                    <small class="text-muted" id="reelAuthorPreview">By You</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteReel">
+                    <i class="fas fa-trash-alt me-2"></i>Delete Reel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% csrf_token %}
+<script>
+// Reel navigation and auto-play system
+let currentReelIndex = 0;
+const reels = document.querySelectorAll('.reel-item');
+const reelsContainer = document.getElementById('reelsContainer');
+let isScrolling = false;
+let scrollTimeout;
+
+// Smooth scroll to specific reel within container
+function scrollToReel(index) {
+    if (index >= 0 && index < reels.length && !isScrolling) {
+        isScrolling = true;
+
+        const targetReel = reels[index];
+        const containerRect = reelsContainer.getBoundingClientRect();
+        const reelRect = targetReel.getBoundingClientRect();
+        const scrollTop = reelsContainer.scrollTop;
+        const targetScrollTop = scrollTop + reelRect.top - containerRect.top;
+
+        reelsContainer.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+        });
+
+        currentReelIndex = index;
+
+        // Auto-play current reel
+        setTimeout(() => {
+            playReel(index);
+            isScrolling = false;
+        }, 800);
+    }
+}
+
+// Play specific reel
+function playReel(index) {
+    reels.forEach((reel, i) => {
+        const iframe = reel.querySelector('.reel-player');
+        const videoId = reel.dataset.videoId;
+
+        if (iframe && videoId) {
+            if (i === index) {
+                // Play current reel
+                const newSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`;
+                iframe.src = newSrc;
+            } else {
+                // Pause other reels
+                const pausedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`;
+                iframe.src = pausedSrc;
+            }
+        }
+    });
+}
+
+// Handle wheel scroll on reels container
+reelsContainer.addEventListener('wheel', function(e) {
+    if (isScrolling) return;
+
+    e.preventDefault();
+
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        if (e.deltaY > 0) {
+            // Scroll down - next reel
+            scrollToReel(currentReelIndex + 1);
+        } else {
+            // Scroll up - previous reel
+            scrollToReel(currentReelIndex - 1);
+        }
+    }, 100);
+}, { passive: false });
+
+// Handle touch events for mobile on reels container
+let startY = 0;
+let endY = 0;
+
+reelsContainer.addEventListener('touchstart', function(e) {
+    startY = e.touches[0].clientY;
+});
+
+reelsContainer.addEventListener('touchend', function(e) {
+    if (isScrolling) return;
+
+    endY = e.changedTouches[0].clientY;
+    const diff = startY - endY;
+
+    if (Math.abs(diff) > 50) { // Minimum swipe distance
+        if (diff > 0) {
+            // Swipe up - next reel
+            scrollToReel(currentReelIndex + 1);
+        } else {
+            // Swipe down - previous reel
+            scrollToReel(currentReelIndex - 1);
+        }
+    }
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if (isScrolling) return;
+
+    if (e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        scrollToReel(currentReelIndex + 1);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        scrollToReel(currentReelIndex - 1);
+    }
+});
+
+// Sound control functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.sound-btn')) {
+        const btn = e.target.closest('.sound-btn');
+        const videoId = btn.dataset.videoId;
+        const icon = btn.querySelector('i');
+        const iframe = btn.parentElement.querySelector('.reel-player');
+
+        if (videoId && iframe) {
+            const currentSrc = iframe.src;
+            const isMuted = currentSrc.includes('mute=1');
+
+            if (isMuted) {
+                // Unmute the video
+                const newSrc = currentSrc.replace('mute=1', 'mute=0');
+                iframe.src = newSrc;
+                icon.className = 'fas fa-volume-up';
+                btn.classList.remove('muted');
+                btn.classList.add('unmuted');
+                btn.title = 'Mute Video';
+            } else {
+                // Mute the video
+                const newSrc = currentSrc.replace('mute=0', 'mute=1');
+                iframe.src = newSrc;
+                icon.className = 'fas fa-volume-mute';
+                btn.classList.remove('unmuted');
+                btn.classList.add('muted');
+                btn.title = 'Tap for Sound';
+            }
+        }
+    }
+});
+
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Like functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.like-btn')) {
+        e.preventDefault();
+        const btn = e.target.closest('.like-btn');
+        const postId = btn.dataset.postId;
+
+        fetch('/posts/like/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: `post_id=${postId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            const icon = btn.querySelector('i');
+            const count = btn.querySelector('.like-count');
+
+            if (data.status === 'liked') {
+                btn.classList.add('liked');
+                icon.className = 'fas fa-heart';
+                // Heart animation
+                btn.style.transform = 'scale(1.2)';
+                setTimeout(() => btn.style.transform = 'scale(1)', 200);
+            } else {
+                btn.classList.remove('liked');
+                icon.className = 'far fa-heart';
+            }
+            count.textContent = data.likes_count;
+        });
+    }
+});
+
+// Share functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.share-btn')) {
+        e.preventDefault();
+        const btn = e.target.closest('.share-btn');
+        const postId = btn.dataset.postId;
+
+        const url = `${window.location.origin}/posts/${postId}/`;
+        navigator.clipboard.writeText(url).then(() => {
+            fetch('/posts/share/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: `post_id=${postId}&share_type=link`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const count = btn.querySelector('.shares-count');
+                count.textContent = data.shares_count;
+
+                // Show feedback
+                const originalIcon = btn.querySelector('i').className;
+                btn.querySelector('i').className = 'fas fa-check';
+                setTimeout(() => {
+                    btn.querySelector('i').className = originalIcon;
+                }, 2000);
+            });
+        });
+    }
+});
+
+// Save functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.save-btn')) {
+        e.preventDefault();
+        const btn = e.target.closest('.save-btn');
+        const postId = btn.dataset.postId;
+
+        fetch('/posts/save/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: `post_id=${postId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            const icon = btn.querySelector('i');
+
+            if (data.status === 'saved') {
+                btn.classList.add('saved');
+                icon.className = 'fas fa-bookmark';
+            } else {
+                btn.classList.remove('saved');
+                icon.className = 'far fa-bookmark';
+            }
+        });
+    }
+});
+
+// Comment functionality
+let currentCommentReelId = null;
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.comment-btn')) {
+        e.preventDefault();
+        const btn = e.target.closest('.comment-btn');
+        currentCommentReelId = btn.dataset.reelId;
+
+        // Open comment modal
+        const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+        modal.show();
+
+        // Load comments (placeholder for now)
+        loadComments(currentCommentReelId);
+    }
+});
+
+// Submit comment
+document.getElementById('submitComment').addEventListener('click', function() {
+    const input = document.getElementById('commentInput');
+    const comment = input.value.trim();
+
+    if (comment && currentCommentReelId) {
+        // Add comment (placeholder - you can implement actual comment system)
+        const commentsList = document.getElementById('commentsList');
+        const commentElement = document.createElement('div');
+        commentElement.className = 'mb-2 p-2 bg-light rounded';
+        commentElement.innerHTML = `
+            <strong>{{ user.get_full_name|default:user.username }}</strong>
+            <small class="text-muted">now</small>
+            <p class="mb-0">${comment}</p>
+        `;
+
+        if (commentsList.querySelector('.text-muted')) {
+            commentsList.innerHTML = '';
+        }
+        commentsList.appendChild(commentElement);
+
+        // Update comment count
+        const commentBtn = document.querySelector(`[data-reel-id="${currentCommentReelId}"]`);
+        const countElement = commentBtn.parentElement.querySelector('.comments-count');
+        const currentCount = parseInt(countElement.textContent) || 0;
+        countElement.textContent = currentCount + 1;
+
+        // Clear input
+        input.value = '';
+
+        // Show success message
+        showSuccessMessage('Comment added! 💬');
+    }
+});
+
+// Load comments (placeholder)
+function loadComments(reelId) {
+    const commentsList = document.getElementById('commentsList');
+    // This is a placeholder - you can implement actual comment loading
+    commentsList.innerHTML = '<p class="text-muted text-center">No comments yet. Be the first to comment!</p>';
+}
+
+// Follow functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.follow-btn')) {
+        const btn = e.target.closest('.follow-btn');
+        const username = btn.dataset.username;
+
+        fetch('/accounts/follow/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: `username=${username}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'followed') {
+                btn.textContent = 'Unfollow';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-outline-secondary');
+            } else {
+                btn.textContent = 'Follow';
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-outline-primary');
+            }
+        });
+    }
+});
+
+// Play video functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.play-indicator') || e.target.closest('.video-overlay')) {
+        const container = e.target.closest('.reel-video-container');
+        const playBtn = container.querySelector('.play-indicator');
+        const overlay = container.querySelector('.video-overlay');
+        const iframe = container.querySelector('.reel-player');
+        const videoId = iframe.dataset.videoId;
+
+        if (iframe && videoId) {
+            // Update iframe src to start playing
+            const newSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=1&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+            iframe.src = newSrc;
+
+            // Hide play button and overlay
+            if (playBtn) playBtn.style.display = 'none';
+            if (overlay) overlay.style.display = 'none';
+
+            // Show loading indicator briefly
+            const loading = container.querySelector('.video-loading');
+            if (loading) {
+                loading.style.display = 'block';
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 2000);
+            }
+        }
+    }
+});
+
+// Click on video container to play
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.reel-video-container') && !e.target.closest('.sound-btn') && !e.target.closest('.reel-player')) {
+        const container = e.target.closest('.reel-video-container');
+        const overlay = container.querySelector('.video-overlay');
+        const playBtn = container.querySelector('.play-indicator');
+
+        if (overlay || (playBtn && playBtn.style.display !== 'none')) {
+            // Trigger play by clicking overlay or play button
+            if (overlay) {
+                overlay.click();
+            } else if (playBtn) {
+                playBtn.click();
+            }
+        }
+    }
+});
+
+// Double-click detection for delete functionality
+let clickCount = 0;
+let clickTimer = null;
+let selectedReelId = null;
+
+// Handle double-click on reel items for delete
+document.addEventListener('click', function(e) {
+    const reelItem = e.target.closest('.reel-item');
+
+    // Only handle double-click for own reels and avoid conflicts with other buttons
+    if (reelItem && !e.target.closest('.reel-action-btn') && !e.target.closest('.sound-btn') && !e.target.closest('.follow-btn')) {
+        const reelId = reelItem.dataset.reelId;
+        const isOwnReel = {{ user.is_authenticated|yesno:"true,false" }} && reelItem.querySelector('.reel-author a[href*="' + '{{ user.username }}' + '"]');
+
+        if (isOwnReel) {
+            clickCount++;
+
+            if (clickCount === 1) {
+                clickTimer = setTimeout(() => {
+                    clickCount = 0;
+                    // Single click - do nothing special for reels
+                }, 300);
+            } else if (clickCount === 2) {
+                clearTimeout(clickTimer);
+                clickCount = 0;
+
+                // Double click - show delete modal
+                selectedReelId = reelId;
+                showDeleteModal(reelItem);
+            }
+        }
+    }
+});
+
+// Show delete modal with reel preview
+function showDeleteModal(reelItem) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteReelModal'));
+    const reelContent = reelItem.querySelector('.reel-content');
+    const reelAuthor = reelItem.querySelector('.reel-author h6');
+
+    // Update modal content
+    const contentPreview = document.getElementById('reelContentPreview');
+    const authorPreview = document.getElementById('reelAuthorPreview');
+    const previewContainer = document.getElementById('reelPreviewContainer');
+
+    if (reelContent) {
+        contentPreview.textContent = reelContent.textContent.substring(0, 50) + '...';
+    } else {
+        contentPreview.textContent = 'Your reel post';
+    }
+
+    if (reelAuthor) {
+        authorPreview.textContent = 'By ' + reelAuthor.textContent;
+    }
+
+    previewContainer.style.display = 'block';
+    modal.show();
+}
+
+// Handle delete confirmation
+document.getElementById('confirmDeleteReel').addEventListener('click', function() {
+    if (selectedReelId) {
+        fetch('/posts/delete/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: `post_id=${selectedReelId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'deleted') {
+                // Remove the reel item from the page
+                const reelItem = document.querySelector(`[data-reel-id="${selectedReelId}"]`);
+                if (reelItem) {
+                    reelItem.style.transition = 'all 0.5s ease';
+                    reelItem.style.opacity = '0';
+                    reelItem.style.transform = 'scale(0.8)';
+
+                    setTimeout(() => {
+                        reelItem.remove();
+
+                        // Update reels array and check if no reels left
+                        const remainingReels = document.querySelectorAll('.reel-item');
+                        if (remainingReels.length === 0) {
+                            location.reload(); // Reload to show "no reels" message
+                        } else {
+                            // Update current index if needed
+                            if (currentReelIndex >= remainingReels.length) {
+                                currentReelIndex = remainingReels.length - 1;
+                            }
+                            // Scroll to current reel
+                            scrollToReel(currentReelIndex);
+                        }
+                    }, 500);
+                }
+
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteReelModal'));
+                modal.hide();
+
+                // Show success message
+                showSuccessMessage('Reel deleted successfully! 🗑️');
+            } else {
+                showErrorMessage('Failed to delete reel. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorMessage('Error deleting reel. Please try again.');
+        });
+    }
+});
+
+// Success/Error message functions
+function showSuccessMessage(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function showErrorMessage(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('CAMIGO Reels - Full Screen Experience Loaded! 🎬');
+
+    // Hide scroll indicator after 3 seconds
+    setTimeout(() => {
+        const indicator = document.querySelector('.scroll-indicator');
+        if (indicator) {
+            indicator.style.opacity = '0';
+            indicator.style.transition = 'opacity 1s ease';
+        }
+    }, 3000);
+
+    // Update current reel index based on scroll position
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const reelIndex = Array.from(reels).indexOf(entry.target);
+                if (reelIndex !== -1 && reelIndex !== currentReelIndex) {
+                    currentReelIndex = reelIndex;
+                    playReel(reelIndex);
+                }
+            }
+        });
+    }, { threshold: 0.7 });
+
+    reels.forEach(reel => observer.observe(reel));
+
+    // Add visual feedback for double-click on own reels
+    document.querySelectorAll('.reel-item').forEach(item => {
+        const isOwnReel = {{ user.is_authenticated|yesno:"true,false" }} && item.querySelector('.reel-author a[href*="' + '{{ user.username }}' + '"]');
+
+        if (isOwnReel) {
+            // Add subtle indicator that this reel can be deleted
+            item.style.cursor = 'pointer';
+            item.title = 'Double-click to delete this reel';
+
+            // Add a small delete indicator
+            const deleteIndicator = document.createElement('div');
+            deleteIndicator.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            deleteIndicator.style.cssText = `
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                background: rgba(255, 0, 0, 0.8);
+                color: white;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                z-index: 20;
+                pointer-events: none;
+            `;
+            item.style.position = 'relative';
+            item.appendChild(deleteIndicator);
+
+            // Show delete indicator on hover
+            item.addEventListener('mouseenter', () => {
+                deleteIndicator.style.opacity = '0.8';
+            });
+
+            item.addEventListener('mouseleave', () => {
+                deleteIndicator.style.opacity = '0';
+            });
+        }
+    });
+
+    // Start with first reel
+    if (reels.length > 0) {
+        playReel(0);
+    }
+});
+</script>
+{% endblock %}

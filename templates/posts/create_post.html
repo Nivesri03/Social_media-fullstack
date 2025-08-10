@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+
+{% block title %}Create Post - CAMIGO{% endblock %}
+
+{% block content %}
+<div class="feed-container">
+    <div class="post-card">
+        <div class="post-header" style="justify-content: center; padding: 1.5rem;">
+            <h3 style="color: var(--xeox-dark); margin: 0;">
+                <i class="fas fa-plus me-2" style="color: var(--xeox-purple);"></i>
+                Create New Post
+            </h3>
+        </div>
+    </div>
+
+    <div class="post-card">
+        <div style="padding: 2rem;">
+                <form method="post" enctype="multipart/form-data" id="postForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.content.id_for_label }}" class="form-label">
+                            <i class="fas fa-edit me-2"></i>What's on your mind?
+                        </label>
+                        {{ form.content|add_class:"form-control" }}
+                        {% if form.content.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.content.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.post_type.id_for_label }}" class="form-label">
+                                <i class="fas fa-tag me-2"></i>Post Type
+                            </label>
+                            {{ form.post_type|add_class:"form-control" }}
+                            {% if form.post_type.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.post_type.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3" id="captionField">
+                            <label for="{{ form.caption.id_for_label }}" class="form-label">
+                                <i class="fas fa-closed-captioning me-2"></i>Caption
+                            </label>
+                            {{ form.caption|add_class:"form-control" }}
+                            {% if form.caption.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.caption.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3" id="imageField">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">
+                                <i class="fas fa-image me-2"></i>Image
+                            </label>
+                            {{ form.image|add_class:"form-control" }}
+                            {% if form.image.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.image.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3" id="videoField">
+                            <label for="{{ form.video.id_for_label }}" class="form-label">
+                                <i class="fas fa-video me-2"></i>Video File
+                            </label>
+                            {{ form.video|add_class:"form-control" }}
+                            {% if form.video.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.video.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3" id="youtubeField">
+                            <label for="{{ form.youtube_url.id_for_label }}" class="form-label">
+                                <i class="fab fa-youtube me-2" style="color: #ff0000;"></i>YouTube URL
+                            </label>
+                            {{ form.youtube_url|add_class:"form-control" }}
+                            {% if form.youtube_url.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.youtube_url.errors }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <small>For reels, paste YouTube Shorts URL (e.g., https://www.youtube.com/shorts/VIDEO_ID)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div id="mediaPreview" class="mb-3" style="display: none;">
+                        <h6>Preview:</h6>
+                        <div id="previewContent"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'core:home' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Post Tips -->
+        <div class="card mt-4" id="postTips">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Tips for Great Posts
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0" id="generalTips">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Use engaging captions to tell your story
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Add relevant hashtags to reach more people
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        High-quality images and videos perform better
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Post consistently to keep your audience engaged
+                    </li>
+                </ul>
+                <ul class="list-unstyled mb-0" id="reelTips" style="display: none;">
+                    <li class="mb-2">
+                        <i class="fab fa-youtube text-danger me-2"></i>
+                        Use YouTube Shorts URLs for best results
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Vertical videos (9:16) work best for reels
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Keep reels short and engaging (15-60 seconds)
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Add trending hashtags to increase visibility
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Post reels regularly to grow your audience
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Show/hide fields based on post type
+document.getElementById('{{ form.post_type.id_for_label }}').addEventListener('change', function() {
+    const postType = this.value;
+    const imageField = document.getElementById('imageField');
+    const videoField = document.getElementById('videoField');
+    const youtubeField = document.getElementById('youtubeField');
+    const captionField = document.getElementById('captionField');
+
+    // Reset visibility
+    imageField.style.display = 'block';
+    videoField.style.display = 'block';
+    youtubeField.style.display = 'none';
+    captionField.style.display = 'block';
+
+    if (postType === 'text') {
+        imageField.style.display = 'none';
+        videoField.style.display = 'none';
+        youtubeField.style.display = 'none';
+        captionField.style.display = 'none';
+    } else if (postType === 'image') {
+        videoField.style.display = 'none';
+        youtubeField.style.display = 'none';
+    } else if (postType === 'video') {
+        imageField.style.display = 'none';
+        youtubeField.style.display = 'none';
+    } else if (postType === 'reel') {
+        imageField.style.display = 'none';
+        videoField.style.display = 'none';
+        youtubeField.style.display = 'block';
+    }
+
+    // Update tips based on post type
+    const generalTips = document.getElementById('generalTips');
+    const reelTips = document.getElementById('reelTips');
+
+    if (postType === 'reel') {
+        generalTips.style.display = 'none';
+        reelTips.style.display = 'block';
+    } else {
+        generalTips.style.display = 'block';
+        reelTips.style.display = 'none';
+    }
+});
+
+// Image preview
+document.getElementById('{{ form.image.id_for_label }}').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            showPreview('image', e.target.result);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        hidePreview();
+    }
+});
+
+// Video preview
+document.getElementById('{{ form.video.id_for_label }}').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const url = URL.createObjectURL(file);
+        showPreview('video', url);
+    } else {
+        hidePreview();
+    }
+});
+
+// YouTube URL preview
+document.getElementById('{{ form.youtube_url.id_for_label }}').addEventListener('input', function(e) {
+    const url = e.target.value.trim();
+    if (url) {
+        const videoId = extractYouTubeId(url);
+        if (videoId) {
+            showPreview('youtube', videoId);
+            // Show success feedback
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            hidePreview();
+            // Show error feedback
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    } else {
+        hidePreview();
+        this.classList.remove('is-valid', 'is-invalid');
+    }
+});
+
+// Extract YouTube video ID from URL
+function extractYouTubeId(url) {
+    const patterns = [
+        /youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+        /youtu\.be\/([a-zA-Z0-9_-]+)/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/,
+        /youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/
+    ];
+
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match) {
+            return match[1];
+        }
+    }
+    return null;
+}
+
+function showPreview(type, src) {
+    const preview = document.getElementById('mediaPreview');
+    const content = document.getElementById('previewContent');
+
+    if (type === 'image') {
+        content.innerHTML = `<img src="${src}" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">`;
+    } else if (type === 'video') {
+        content.innerHTML = `<video controls class="img-fluid rounded" style="max-height: 300px;">
+                                <source src="${src}" type="video/mp4">
+                            </video>`;
+    } else if (type === 'youtube') {
+        content.innerHTML = `
+            <div class="youtube-preview" style="max-width: 400px;">
+                <iframe
+                    src="https://www.youtube.com/embed/${src}?mute=1&controls=1&showinfo=0&rel=0&modestbranding=1"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                    style="width: 100%; height: 225px; border-radius: 8px;">
+                </iframe>
+                <div class="mt-2 text-center">
+                    <small class="text-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Valid YouTube URL detected! Video ID: ${src}
+                    </small>
+                </div>
+            </div>
+        `;
+    }
+
+    preview.style.display = 'block';
+}
+
+function hidePreview() {
+    document.getElementById('mediaPreview').style.display = 'none';
+}
+
+// Auto-resize textarea
+const textarea = document.getElementById('{{ form.content.id_for_label }}');
+textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = this.scrollHeight + 'px';
+});
+
+// Character counter for content
+textarea.addEventListener('input', function() {
+    const count = this.value.length;
+    const maxLength = 2000;
+    
+    let counter = document.getElementById('contentCounter');
+    if (!counter) {
+        counter = document.createElement('div');
+        counter.id = 'contentCounter';
+        counter.className = 'text-end mt-1';
+        this.parentNode.appendChild(counter);
+    }
+    
+    counter.innerHTML = `<small class="${count > maxLength ? 'text-danger' : 'text-muted'}">${count}/${maxLength}</small>`;
+});
+
+// Form submission
+document.getElementById('postForm').addEventListener('submit', function(e) {
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Posting...';
+    submitBtn.disabled = true;
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Check URL parameters for post type
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeParam = urlParams.get('type');
+
+    if (typeParam === 'reel') {
+        const postTypeSelect = document.getElementById('{{ form.post_type.id_for_label }}');
+        postTypeSelect.value = 'reel';
+
+        // Show reel-specific message
+        const header = document.querySelector('.post-card .post-header h3');
+        if (header) {
+            header.innerHTML = '<i class="fas fa-video me-2" style="color: var(--xeox-purple);"></i>Create New Reel';
+        }
+    }
+
+    // Trigger post type change to set initial state
+    document.getElementById('{{ form.post_type.id_for_label }}').dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}
